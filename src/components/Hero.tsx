@@ -2,7 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, Zap } from "lucide-react";
 import heroImage from "@/assets/hero-scheduling.jpg";
 
-const Hero = () => {
+interface HeroProps {
+  onDemoClick?: () => void;
+  onCreateClick?: () => void;
+}
+
+const Hero = ({ onDemoClick, onCreateClick }: HeroProps) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Hero Background */}
@@ -30,11 +35,13 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button variant="professional" size="lg" className="text-lg px-8 py-4">
+            <Button variant="professional" size="lg" className="text-lg px-8 py-4" onClick={onCreateClick}
+            >
               <Calendar className="w-5 h-5" />
               Create Your First Event
             </Button>
-            <Button variant="ghost" size="lg" className="text-lg px-8 py-4 text-white border-white/30 hover:bg-white/10">
+            <Button variant="ghost" size="lg" className="text-lg px-8 py-4 text-white border-white/30 hover:bg-white/10" onClick={onDemoClick}
+            >
               <Users className="w-5 h-5" />
               View Demo
             </Button>

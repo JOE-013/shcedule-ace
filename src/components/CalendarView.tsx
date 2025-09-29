@@ -2,22 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
-import calendarImage from "@/assets/calendar-illustration.jpg";
 import { useMemo, useState } from "react";
 import ConflictGraph from "@/components/ConflictGraph";
 import { useEventStore } from "@/lib/store";
 
-// Sample events data
-const sampleEvents = [
-  { id: 1, title: "Team Standup", time: "09:00", date: "2024-01-15", category: "Meeting" },
-  { id: 2, title: "Product Demo", time: "14:00", date: "2024-01-15", category: "Conference" },
-  { id: 3, title: "Design Review", time: "10:30", date: "2024-01-16", category: "Workshop" },
-  { id: 4, title: "Client Call", time: "16:00", date: "2024-01-17", category: "Meeting" },
-  { id: 5, title: "Team Lunch", time: "12:00", date: "2024-01-18", category: "Social" },
-];
-
 const CalendarView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -51,19 +42,11 @@ const CalendarView = () => {
 
   const userEvents = useEventStore(s => s.events);
 
-  // Adapt events (sample + user) into ConflictGraph input for the current visible month
+  // Adapt events (user) into ConflictGraph input for the current visible month
   const graphEvents = useMemo(() => {
     const yyyy = currentDate.getFullYear();
     const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const merged = [...sampleEvents.map(e => ({
-      id: String(e.id),
-      title: e.title,
-      date: e.date,
-      time: e.time,
-      durationMinutes: 60,
-      priority: 1,
-      createdAtMs: 1,
-    })), ...userEvents.map(e => ({
+    const merged = userEvents.map(e => ({
       id: e.id,
       title: e.title,
       date: e.date,
@@ -71,11 +54,29 @@ const CalendarView = () => {
       durationMinutes: e.durationMinutes,
       priority: e.priority ?? 0,
       createdAtMs: e.createdAtMs,
-    }))];
+    }));
     return merged
       .filter(e => e.date.startsWith(`${yyyy}-${mm}-`))
       ;
   }, [currentDate]);
+
+  const formatDate = (y: number, m: number, d: number) => `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const eventsOnSelectedDay = useMemo(() => {
+    if (!selectedDate) return [] as typeof userEvents;
+    return userEvents
+      .filter(e => e.date === selectedDate)
+      .slice()
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, [selectedDate, userEvents]);
+
+  const upcoming = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0,10);
+    return userEvents
+      .filter(e => e.date >= todayStr)
+      .slice()
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+      .slice(0, 5);
+  }, [userEvents]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -122,25 +123,10 @@ const CalendarView = () => {
             {days.map(day => (
               <div
                 key={day}
-                className="border rounded-lg p-2 h-20 hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => setSelectedDate(formatDate(currentDate.getFullYear(), currentDate.getMonth()+1, day))}
+                className={`border rounded-lg p-2 h-20 hover:bg-accent/50 transition-colors cursor-pointer ${selectedDate === formatDate(currentDate.getFullYear(), currentDate.getMonth()+1, day) ? 'ring-2 ring-primary' : ''}`}
               >
                 <div className="text-sm font-medium">{day}</div>
-                {/* Sample event indicators */}
-                {day === 15 && (
-                  <div className="space-y-1 mt-1">
-                    <div className="text-xs bg-primary text-primary-foreground px-1 rounded truncate">
-                      Standup
-                    </div>
-                    <div className="text-xs bg-success text-success-foreground px-1 rounded truncate">
-                      Demo
-                    </div>
-                  </div>
-                )}
-                {day === 16 && (
-                  <div className="text-xs bg-secondary text-secondary-foreground px-1 rounded truncate mt-1">
-                    Review
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -154,29 +140,57 @@ const CalendarView = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {sampleEvents.map(event => (
-              <div
-                key={event.id}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-              >
+            {upcoming.length === 0 && (
+              <div className="text-sm text-muted-foreground">No upcoming events</div>
+            )}
+            {upcoming.map(e => (
+              <div key={e.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-primary rounded-full"></div>
                   <div>
-                    <div className="font-medium">{event.title}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {event.date} at {event.time}
-                    </div>
+                    <div className="font-medium">{e.title}</div>
+                    <div className="text-sm text-muted-foreground">{e.date} at {e.time}</div>
                   </div>
                 </div>
-                <Badge variant="outline">{event.category}</Badge>
+                <Badge variant="outline">{(e.priority ?? 0) === 0 ? 'High' : 'Low'}</Badge>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
+      {/* Events on selected day */}
+      {selectedDate && (
+        <Card className="animate-slide-up">
+          <CardHeader>
+            <CardTitle>Events on {selectedDate}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {eventsOnSelectedDay.length === 0 && (
+                <div className="text-sm text-muted-foreground">No events on this day</div>
+              )}
+              {eventsOnSelectedDay.map(e => (
+                <div key={e.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-primary rounded-full"></div>
+                    <div>
+                      <div className="font-medium">{e.title}</div>
+                      <div className="text-sm text-muted-foreground">{e.time} • {e.durationMinutes}m</div>
+                    </div>
+                  </div>
+                  <Badge variant="outline">{(e.priority ?? 0) === 0 ? 'High' : 'Low'}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Conflict Graph Section */}
-      <ConflictGraph events={graphEvents} />
+      <div className="rounded-xl border p-2 bg-gradient-to-br from-background to-accent/20">
+        <ConflictGraph events={graphEvents} />
+      </div>
     </div>
   );
 };

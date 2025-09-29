@@ -4,40 +4,12 @@ import Navigation from "@/components/Navigation";
 import CalendarView from "@/components/CalendarView";
 import EventForm from "@/components/EventForm";
 import EventCard from "@/components/EventCard";
-import PriorityList from "@/components/PriorityList";
+import DemoView from "@/components/DemoView";
+import { useEventStore } from "@/lib/store";
 
 const Index = () => {
   const [currentView, setCurrentView] = useState('home');
-
-  // Sample events for demonstration
-  const sampleEvents = [
-    {
-      title: "Weekly Team Meeting",
-      date: "Jan 15, 2024",
-      time: "2:00 PM - 3:00 PM",
-      location: "Conference Room A",
-      attendees: 8,
-      category: "Meeting",
-      isUpcoming: true
-    },
-    {
-      title: "Product Launch Event",
-      date: "Jan 20, 2024", 
-      time: "10:00 AM - 6:00 PM",
-      location: "Main Auditorium",
-      attendees: 150,
-      category: "Conference",
-      isUpcoming: true
-    },
-    {
-      title: "Design Workshop",
-      date: "Jan 25, 2024",
-      time: "1:00 PM - 4:00 PM",
-      attendees: 12,
-      category: "Workshop",
-      isUpcoming: false
-    }
-  ];
+  const events = useEventStore(s => s.events);
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -46,16 +18,22 @@ const Index = () => {
       case 'create':
         return (
           <div className="pt-24 px-6 min-h-screen bg-gradient-to-br from-accent to-secondary/30">
-            <EventForm />
+            <EventForm onCreated={() => setCurrentView('home')} />
+          </div>
+        );
+      case 'demo':
+        return (
+          <div className="pt-24 px-6 min-h-screen bg-gradient-to-br from-accent to-secondary/30">
+            <DemoView />
           </div>
         );
       case 'home':
       default:
         return (
           <>
-            <Hero />
+            <Hero onDemoClick={() => setCurrentView('demo')} onCreateClick={() => setCurrentView('create')} />
             
-            {/* Recent Events Section */}
+            {/* Your Events */}
             <section className="py-20 px-6 bg-gradient-to-br from-accent to-secondary/30">
               <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-12">
@@ -63,18 +41,24 @@ const Index = () => {
                   <p className="text-lg text-muted-foreground">Manage and track all your scheduled events</p>
                 </div>
                 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {sampleEvents.map((event, index) => (
-                    <EventCard key={index} {...event} />
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Priority List Section */}
-            <section className="py-12 px-6">
-              <div className="max-w-6xl mx-auto">
-                <PriorityList />
+                {events.length === 0 ? (
+                  <div className="text-center text-muted-foreground">No events yet. Create your first event above.</div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {events.map((e) => (
+                      <EventCard
+                        key={e.id}
+                        title={e.title}
+                        date={e.date}
+                        time={`${e.time} - ${e.durationMinutes}m`}
+                        location={e.location}
+                        attendees={0}
+                        category={(e.priority ?? 0) === 0 ? 'High' : 'Low'}
+                        isUpcoming
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </section>
           </>
@@ -84,7 +68,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation currentView={currentView} onViewChange={setCurrentView} />
+      <Navigation currentView={currentView} onViewChange={(v) => setCurrentView(v)} />
+      {/* Auto-redirect to home after event creation handled by toast + user flow */}
       {renderCurrentView()}
     </div>
   );

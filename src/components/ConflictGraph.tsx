@@ -38,37 +38,46 @@ const ConflictGraph = ({ events, preferFirstScheduled = true }: ConflictGraphPro
 	return (
 		<Card className="animate-slide-up">
 			<CardHeader>
-				<CardTitle className="flex items-center justify-between">
-					<span>Conflict Graph</span>
-					<Badge variant={conflictCount > 0 ? "destructive" : "secondary"}>
-						{conflictCount} {conflictCount === 1 ? "conflict" : "conflicts"}
-					</Badge>
-				</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+                        Conflict Graph
+                    </span>
+                    <Badge variant={conflictCount > 0 ? "destructive" : "secondary"}>
+                        {conflictCount} {conflictCount === 1 ? "conflict" : "conflicts"}
+                    </Badge>
+                </CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div className="text-sm text-muted-foreground">
 					Shows overlapping events as a graph and suggested allocations using Welsh–Powell.
 				</div>
 				<Separator />
-				<div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-6">
 					<div className="space-y-2">
-						<div className="font-medium">Edges (Overlaps)</div>
-						<div className="text-sm space-y-1">
+                        <div className="font-medium">Overlapping Pairs</div>
+                        <div className="text-sm space-y-2">
 							{graph.edges.length === 0 && <div className="text-muted-foreground">No overlaps detected</div>}
 							{graph.edges.map((e, i) => (
-								<div key={i} className="flex items-center gap-2">
-									<Badge variant="outline">{idToEvent[e.from]?.title ?? e.from}</Badge>
-									<span className="text-muted-foreground">↔</span>
-									<Badge variant="outline">{idToEvent[e.to]?.title ?? e.to}</Badge>
+                                <div key={i} className="flex items-center justify-between p-2 rounded-md bg-accent/40">
+                                    <div className="flex items-center gap-2">
+                                        <span className="inline-block w-2 h-2 bg-primary rounded-full" />
+                                        <span>{idToEvent[e.from]?.title ?? e.from}</span>
+                                    </div>
+                                    <span className="text-muted-foreground">↔</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="inline-block w-2 h-2 bg-secondary rounded-full" />
+                                        <span>{idToEvent[e.to]?.title ?? e.to}</span>
+                                    </div>
 								</div>
 							))}
 						</div>
 					</div>
 					<div className="space-y-2">
-						<div className="font-medium">Suggested Allocation (Coloring)</div>
-						<div className="text-sm space-y-1">
+                        <div className="font-medium">Suggested Allocation</div>
+                        <div className="text-sm space-y-2">
 							{allocationSummary.map((line, i) => (
-								<div key={i}>{line}</div>
+                                <div key={i} className="p-2 rounded-md bg-accent/30">{line}</div>
 							))}
 						</div>
 					</div>

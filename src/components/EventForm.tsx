@@ -3,12 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Plus } from "lucide-react";
 import { useState } from "react";
 import { useEventStore } from "@/lib/store";
+import { useToast } from "@/hooks/use-toast";
+import { buildConflictGraph } from "@/lib/scheduling";
 
-const EventForm = () => {
+interface EventFormProps {
+  onCreated?: () => void;
+}
+
+const EventForm = ({ onCreated }: EventFormProps) => {
   const [formData, setFormData] = useState({
     title: "",
     date: "",
@@ -16,33 +21,49 @@ const EventForm = () => {
     duration: "",
     location: "",
     description: "",
-    category: ""
+    priority: "high"
   });
 
   const addEvent = useEventStore(s => s.addEvent);
+  const events = useEventStore(s => s.events);
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const durationMinutes =
-      formData.duration === "30min" ? 30 :
-      formData.duration === "1hour" ? 60 :
-      formData.duration === "2hours" ? 120 :
-      formData.duration === "halfday" ? 240 :
-      formData.duration === "fullday" ? 480 : 60;
+    const durationMinutes = Math.max(1, parseInt(formData.duration || "60", 10));
 
     const isoDate = formData.date; // already YYYY-MM-DD
-    addEvent({
+    const created = addEvent({
       title: formData.title,
       date: isoDate,
       time: formData.time,
       durationMinutes,
       location: formData.location,
       description: formData.description,
-      category: formData.category,
-      priority: 0,
+      priority: formData.priority === 'high' ? 0 : 1,
     });
+    // Conflict notification: check overlaps on that date
+    try {
+      const sameDay = [...events, created]
+        .filter(e => e.date === isoDate)
+        .map((e, idx) => ({
+          id: e.id,
+          title: e.title,
+          date: e.date,
+          time: e.time,
+          durationMinutes: e.durationMinutes,
+          priority: e.priority ?? 0,
+          createdAtMs: e.createdAtMs ?? idx,
+        }));
+      const graph = buildConflictGraph(sameDay as any);
+      if (graph.adjacency[created.id] && graph.adjacency[created.id].size > 0) {
+        toast({ title: "Conflict detected", description: "This event overlaps with another on the selected day." });
+      }
+    } catch {}
 
-    setFormData({ title: "", date: "", time: "", duration: "", location: "", description: "", category: "" });
+    setFormData({ title: "", date: "", time: "", duration: "", location: "", description: "", priority: "high" });
+    toast({ title: "Event scheduled", description: `${formData.title} on ${isoDate} at ${formData.time}` });
+    if (onCreated) onCreated();
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -97,35 +118,28 @@ const EventForm = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="duration">Duration</Label>
-              <Select onValueChange={(value) => handleInputChange("duration", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="30min">30 minutes</SelectItem>
-                  <SelectItem value="1hour">1 hour</SelectItem>
-                  <SelectItem value="2hours">2 hours</SelectItem>
-                  <SelectItem value="halfday">Half day</SelectItem>
-                  <SelectItem value="fullday">Full day</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Input
+                id="duration"
+                placeholder="e.g. 60"
+                inputMode="numeric"
+                value={formData.duration}
+                onChange={(e) => handleInputChange("duration", e.target.value)}
+                required
+              />
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select onValueChange={(value) => handleInputChange("category", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="meeting">Meeting</SelectItem>
-                  <SelectItem value="conference">Conference</SelectItem>
-                  <SelectItem value="workshop">Workshop</SelectItem>
-                  <SelectItem value="social">Social</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="priority">Priority</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="radio" name="priority" checked={formData.priority === 'high'} onChange={() => handleInputChange('priority','high')} />
+                  High
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="radio" name="priority" checked={formData.priority === 'low'} onChange={() => handleInputChange('priority','low')} />
+                  Low
+                </label>
+              </div>
             </div>
           </div>
           
