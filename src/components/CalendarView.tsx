@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import calendarImage from "@/assets/calendar-illustration.jpg";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import ConflictGraph from "@/components/ConflictGraph";
+import { useEventStore } from "@/lib/store";
 
 // Sample events data
 const sampleEvents = [
@@ -46,6 +48,34 @@ const CalendarView = () => {
   const firstDayOfMonth = getFirstDayOfMonth(currentDate);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+
+  const userEvents = useEventStore(s => s.events);
+
+  // Adapt events (sample + user) into ConflictGraph input for the current visible month
+  const graphEvents = useMemo(() => {
+    const yyyy = currentDate.getFullYear();
+    const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const merged = [...sampleEvents.map(e => ({
+      id: String(e.id),
+      title: e.title,
+      date: e.date,
+      time: e.time,
+      durationMinutes: 60,
+      priority: 1,
+      createdAtMs: 1,
+    })), ...userEvents.map(e => ({
+      id: e.id,
+      title: e.title,
+      date: e.date,
+      time: e.time,
+      durationMinutes: e.durationMinutes,
+      priority: e.priority ?? 0,
+      createdAtMs: e.createdAtMs,
+    }))];
+    return merged
+      .filter(e => e.date.startsWith(`${yyyy}-${mm}-`))
+      ;
+  }, [currentDate]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -144,6 +174,9 @@ const CalendarView = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Conflict Graph Section */}
+      <ConflictGraph events={graphEvents} />
     </div>
   );
 };

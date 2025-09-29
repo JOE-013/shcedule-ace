@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Plus } from "lucide-react";
 import { useState } from "react";
+import { useEventStore } from "@/lib/store";
 
 const EventForm = () => {
   const [formData, setFormData] = useState({
@@ -18,10 +19,30 @@ const EventForm = () => {
     category: ""
   });
 
+  const addEvent = useEventStore(s => s.addEvent);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Event created:", formData);
-    // Here you would handle form submission
+    const durationMinutes =
+      formData.duration === "30min" ? 30 :
+      formData.duration === "1hour" ? 60 :
+      formData.duration === "2hours" ? 120 :
+      formData.duration === "halfday" ? 240 :
+      formData.duration === "fullday" ? 480 : 60;
+
+    const isoDate = formData.date; // already YYYY-MM-DD
+    addEvent({
+      title: formData.title,
+      date: isoDate,
+      time: formData.time,
+      durationMinutes,
+      location: formData.location,
+      description: formData.description,
+      category: formData.category,
+      priority: 0,
+    });
+
+    setFormData({ title: "", date: "", time: "", duration: "", location: "", description: "", category: "" });
   };
 
   const handleInputChange = (field: string, value: string) => {

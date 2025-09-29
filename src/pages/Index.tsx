@@ -4,6 +4,7 @@ import Navigation from "@/components/Navigation";
 import CalendarView from "@/components/CalendarView";
 import EventForm from "@/components/EventForm";
 import EventCard from "@/components/EventCard";
+import PriorityList from "@/components/PriorityList";
 
 const Index = () => {
   const [currentView, setCurrentView] = useState('home');
@@ -67,6 +68,13 @@ const Index = () => {
                     <EventCard key={index} {...event} />
                   ))}
                 </div>
+              </div>
+            </section>
+
+            {/* Priority List Section */}
+            <section className="py-12 px-6">
+              <div className="max-w-6xl mx-auto">
+                <PriorityList />
               </div>
             </section>
           </>

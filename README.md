@@ -64,6 +64,33 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/8e7d769b-4939-4953-9cf7-c37b42c1bbbd) and click on Share -> Publish.
 
+## Development
+
+Frontend:
+
+```
+npm install
+npm run dev
+```
+
+Backend (C + SQLite):
+
+- Prereqs: libmicrohttpd, sqlite3 dev libs
+- Build:
+
+```
+cd backend-c
+make
+./schedule_server
+```
+
+Set `VITE_BACKEND_URL` for the frontend (defaults to `http://localhost:8080`).
+
+Scheduling:
+
+- Conflict graph via adjacency list with sweep-line per day
+- Welsh–Powell coloring for allocation suggestions
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
