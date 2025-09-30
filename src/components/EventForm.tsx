@@ -71,7 +71,7 @@ const EventForm = ({ onCreated }: EventFormProps) => {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto animate-scale-in">
+    <Card className="max-w-2xl mx-auto animate-scale-in mx-4 md:mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-primary" />
@@ -101,6 +101,7 @@ const EventForm = ({ onCreated }: EventFormProps) => {
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 required
+                className="text-base"
               />
             </div>
             
@@ -112,6 +113,7 @@ const EventForm = ({ onCreated }: EventFormProps) => {
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
                 required
+                className="text-base"
               />
             </div>
           </div>
@@ -126,6 +128,7 @@ const EventForm = ({ onCreated }: EventFormProps) => {
                 value={formData.duration}
                 onChange={(e) => handleInputChange("duration", e.target.value)}
                 required
+                className="text-base"
               />
             </div>
             <div className="space-y-2">

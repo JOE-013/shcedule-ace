@@ -79,7 +79,7 @@ const CalendarView = () => {
   }, [userEvents]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 px-4 md:px-0">
       {/* Calendar Header */}
       <Card className="animate-scale-in">
         <CardHeader>
@@ -109,24 +109,24 @@ const CalendarView = () => {
         
         <CardContent>
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-2 mb-4">
+          <div className="grid grid-cols-7 gap-1 md:gap-2 mb-4">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+              <div key={day} className="text-center text-xs md:text-sm font-medium text-muted-foreground p-1 md:p-2">
                 {day}
               </div>
             ))}
             
             {emptyDays.map(day => (
-              <div key={`empty-${day}`} className="p-2 h-20"></div>
+              <div key={`empty-${day}`} className="p-1 md:p-2 h-16 md:h-20"></div>
             ))}
             
             {days.map(day => (
               <div
                 key={day}
                 onClick={() => setSelectedDate(formatDate(currentDate.getFullYear(), currentDate.getMonth()+1, day))}
-                className={`border rounded-lg p-2 h-20 hover:bg-accent/50 transition-colors cursor-pointer ${selectedDate === formatDate(currentDate.getFullYear(), currentDate.getMonth()+1, day) ? 'ring-2 ring-primary' : ''}`}
+                className={`border rounded-lg p-1 md:p-2 h-16 md:h-20 hover:bg-accent/50 transition-colors cursor-pointer ${selectedDate === formatDate(currentDate.getFullYear(), currentDate.getMonth()+1, day) ? 'ring-2 ring-primary' : ''}`}
               >
-                <div className="text-sm font-medium">{day}</div>
+                <div className="text-xs md:text-sm font-medium">{day}</div>
               </div>
             ))}
           </div>

@@ -36,7 +36,7 @@ const steps = [
 
 const DemoView = () => {
 	return (
-		<div className="max-w-6xl mx-auto space-y-8">
+		<div className="max-w-6xl mx-auto space-y-6 md:space-y-8 px-4 md:px-0">
 			<Card className="animate-scale-in border-none shadow-card bg-gradient-to-br from-background to-accent/5">
 				<CardHeader className="text-center space-y-2">
 					<CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
